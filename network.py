@@ -6,8 +6,10 @@ class network():
         self.server = ""
         self.port = 5555
         self.addr = (self.server, self.port) #ip 주소, 포트 --> 튜플
-        self.id = self.connect() # id = connect를 통한 return 값
-        print(self.id)
+        self.pos = self.connect() # id = connect를 통한 return 값
+
+    def getPos(self):
+        return self.pos
 
     def connect(self):
         try:
@@ -22,7 +24,3 @@ class network():
             return self.client.recv(2048).decode()
         except socket.error as e:
             print(e)
-
-n = network()
-print(n.send("Hello YH"))
-print(n.send("confirmed"))
