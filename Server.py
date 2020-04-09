@@ -5,37 +5,57 @@ import sys
 server = ""
 port = 5555
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)#bridge
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-try: #에러가 일어났을때 체크하기위한 코드
+try:
     s.bind((server, port))
 except socket.error as e:
     str(e)
 
-s.listen(2) # unlimited player can join this game, but if 2, only 2 can enter
-print("Waiting for a connection...")
-print("server started!")
+s.listen(2)
+print("Waiting for a connection, Server Started")
 
-def threaded_client(conn):
-    conn.send(str.encode("connected"))
+def read_pos(str):
+    str = str.split(",")
+    return int(str[0]), int(str[1])
+
+
+def make_pos(tup):
+    return str(tup[0]) + "," + str(tup[1])
+
+pos = [(0,0),(100,100)]
+
+def threaded_client(conn, player):
+    conn.send(str.encode(make_pos(pos[player])))
     reply = ""
     while True:
         try:
-            data = conn.recv(2048) # 2^11 만큼의 데이터를 먼저 받는다 -> encode
-            reply = data.decode("utf-8") # 사람의 언어로 바꿔줘야된다 -> decode
+            data = read_pos(conn.recv(2048).decode())
+            pos[player] = data
+
             if not data:
                 print("Disconnected")
                 break
             else:
-                print("Recieved:", reply)
-                print("Sending:", reply)
+                if player == 1:
+                    reply = pos[0]
+                else:
+                    reply = pos[1]
 
-            conn.sendall(str.encode(reply)) #encode 해서 보내고 decode 해서 받는다
+                print("Received: ", data)
+                print("Sending : ", reply)
+
+            conn.sendall(str.encode(make_pos(reply)))
         except:
             break
 
+    print("Lost connection")
+    conn.close()
+
+currentPlayer = 0
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
 
-    start_new_thread(threaded_client, (conn, ))
+    start_new_thread(threaded_client, (conn, currentPlayer))
+    currentPlayer += 1
