@@ -1,4 +1,5 @@
 import socket
+import pickle
 
 class network():
     def __init__(self):
@@ -6,21 +7,21 @@ class network():
         self.server = ""
         self.port = 5555
         self.addr = (self.server, self.port) #ip 주소, 포트 --> 튜플
-        self.pos = self.connect() # id = connect를 통한 return 값
+        self.p = self.connect() # id = connect를 통한 return 값
 
-    def getPos(self):
-        return self.pos
+    def getP(self):
+        return self.p
 
     def connect(self):
         try:
             self.client.connect(self.addr) #
-            return self.client.recv(2048).decode()
+            return pickle.loads(self.client.recv(10000))
         except:
             pass
 
     def send(self, data):
         try: 
-            self.client.send(str.encode(data))
-            return self.client.recv(2048).decode()
+            self.client.send(pickle.dumps(data))
+            return pickle.loads(self.client.recv(10000))
         except socket.error as e:
             print(e)
