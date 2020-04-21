@@ -34,7 +34,26 @@ class Button:
 
 def redrawWindow(win, game, p):
     win.fill((255,255,255))
-    pass
+    
+    if not game.connected():
+        font = pygame.font.SysFont("comicsans", 80)
+        text = font.render("Winting for Player...", 1, (255, 0 ,0), True)
+        win.blit(text, (width/2 - text.get_width()/2, height/2 - text.get_height()/2))
+    else:
+        font = pygame.font.SysFont("comicsans", 80)
+        text = font.render("Your move", 1, (255, 0 ,0), True)
+        win.blit(text, 80, 200)
+
+        text = font.render("Opponents", 1, (255, 0 ,0), True)
+        win.blit(text, 380, 200)
+
+        move1 = game.get_player_move(0)
+        move2 = game.get_player_move(1)
+
+        if game.bothWent():
+            text1 = font.render(move1, 1, (0, 0 ,0))
+            text2 = font.render(move2, 1, (0, 0 ,0))
+
 
 btns = [Button("Rock", 50, 500, (0, 0, 0)), Button("Scissors", 250, 500, (255, 0, 0)), Button("Paper", 450, 500, (0, 255, 0))]
 
@@ -93,3 +112,7 @@ def main():
         redrawWindow(win, game, player)
 
 main()
+#        else:
+#            if game.p1Went and p == 0:
+#                text1 = font.render(move1, 1, (0, 0, 0))
+#            elif 
