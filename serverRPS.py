@@ -1,8 +1,7 @@
 import socket
 from _thread import *
-from player import *
 import pickle
-from gameRPS import * #Game
+from gameRPS import Game
 
 server = ""
 port = 5555
@@ -14,39 +13,42 @@ try:
 except socket.error as e:
     str(e)
 
-s.listen()
-print("Waiting for a connection")
-print("server started")
-
-players = [Player(0, 0, 50, 50,(255, 0, 0)), Player(100, 100, 50, 50,(0, 0, 255))]
+s.listen(2)
+print("Waiting for a connection, Server Started")
 
 connected = set()
 games = {}
-idCount = 0 
+idCount = 0
 
-def threaded_client(conn, p, gameId): # thread는 한번 실행했을때 여러가지일을 한번에 처리해주는 역할
+
+def threaded_client(conn, p, gameId):
     global idCount
-    conn.send(str.encode(p))
+    conn.send(str.encode(str(p)))
+
     reply = ""
-
     while True:
-        data = conn.recv(4096).decode() #client = user client로 부터 받은 데이터
+        try:
+            data = conn.recv(4096).decode()
 
-        if gameId in games:
-            game = games[gameId]
-            if not data:
-                break
+            if gameId in games:
+                game = games[gameId]
+
+                if not data:
+                    break
+                else:
+                    if data == "reset":
+                        game.resetWent()
+                    elif data != "get":
+                        game.play(p, data)
+
+                    conn.sendall(pickle.dumps(game))
             else:
-                if data == "reset":
-                    game.reset()
-                elif data != "get": # != 는 not equal을 의미 함
-                    game.play(p, data)
-                reply = game
-                conn.sendall(pickle.dumps(reply))
-        else: 
+                break
+        except:
             break
+
     print("Lost connection")
-    try:    
+    try:
         del games[gameId]
         print("Closing Game", gameId)
     except:
@@ -54,17 +56,21 @@ def threaded_client(conn, p, gameId): # thread는 한번 실행했을때 여러�
     idCount -= 1
     conn.close()
 
+
+
 while True:
     conn, addr = s.accept()
     print("Connected to:", addr)
 
     idCount += 1
     p = 0
-    gameId = (idCount - 1)//2 # 각 두명의 플레이어가 접속했을때, 둘을 합쳐줘라
+    gameId = (idCount - 1)//2
     if idCount % 2 == 1:
         games[gameId] = Game(gameId)
-        print("Creating a new Game")
+        print("Creating a new game...")
     else:
         games[gameId].ready = True
         p = 1
+
+
     start_new_thread(threaded_client, (conn, p, gameId))
